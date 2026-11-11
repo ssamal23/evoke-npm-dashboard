@@ -19,10 +19,6 @@ h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; margin-top: 4
 .top-meta { text-align: right; color: var(--muted); font-size: .9rem; display: grid; gap: 4px; }
 .source { font-size: .75rem; } .source.error { color: var(--warn); }
 
-.tabs { display: flex; gap: 6px; }
-.tabs button { border: 0; background: transparent; padding: 8px 14px; border-radius: 999px; cursor: pointer; color: var(--muted); font-weight: 500; }
-.tabs button:hover { background: #e9ebf2; }
-.tabs button.on { background: var(--navy); color: #fff; }
 main { display: grid; gap: 20px; }
 
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
@@ -43,7 +39,7 @@ main { display: grid; gap: 20px; }
 .status.current { background: #e3f4e8; color: #0f5b27; margin-left: 0; }
 .status.deprecated { background: #fdebd0; color: #7a4600; }
 .status.previous { background: #eceef4; color: #3d4452; }
-.drawer-head .status { margin-left: 10px; vertical-align: middle; }
+.slideover-title .status { margin-left: 10px; vertical-align: middle; }
 
 /* history table */
 .history { overflow: hidden; }
@@ -79,14 +75,8 @@ select { height: 40px; padding: 0 10px; border: 1px solid #8a8f9a; border-radius
 table.plain { width: 100%; border-collapse: collapse; } table.plain td, table.plain th { padding: 9px 6px; border-bottom: 1px solid #eee; text-align: left; }
 tr.changed { background: #fff4e0; }
 
-/* drawer */
-.drawer-root { position: fixed; inset: 0; z-index: 50; }
-.scrim { position: absolute; inset: 0; background: rgba(11, 21, 96, .35); animation: fade .2s ease-out; }
-.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--surface); display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0, 0, 0, .15); animation: slide .25s ease-out; }
-.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 24px 28px 16px; border-bottom: 1px solid var(--border); }
-.drawer-head h2 { font-size: 1.8rem; letter-spacing: -0.01em; }
-.drawer-body { padding: 20px 28px; overflow-y: auto; flex: 1; display: grid; gap: 20px; align-content: start; }
-.drawer-foot { display: flex; gap: 10px; padding: 16px 28px; border-top: 1px solid var(--border); }
+/* version details (content of the SlideOver) */
+.details { display: grid; gap: 20px; align-content: start; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .stats div { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
 .stats span { color: var(--muted); font-size: .75rem; } .stats strong { font-size: 1.05rem; }
@@ -98,9 +88,6 @@ tr.changed { background: #fff4e0; }
 .entry-ver { color: var(--muted); margin-right: auto; }
 .entries p { margin-top: 4px; }
 .callout { background: #fdebd0; color: #7a4600; border-radius: 10px; padding: 10px 14px; font-size: .9rem; }
-@keyframes slide { from { transform: translateX(100%); } to { transform: none; } }
-@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .drawer, .scrim { animation: none; } }
 
 @media (max-width: 900px) {
   .page { padding: 24px 16px 48px; }

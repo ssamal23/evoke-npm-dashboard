@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { SlideOver } from './components/SlideOver';
 import { COMPAT, type Compat, type Entry, type Status } from './data/compat';
 
 const PKG = '@evoke-tech/stencil-ui-kit';
@@ -239,42 +240,26 @@ function EntryList({ title, list }: { title: string; list: Entry[] }) {
   );
 }
 
-function Drawer({ r, onClose }: { r: Release; onClose: () => void }) {
+/** Details of one release, shown inside the reusable SlideOver panel. */
+function VersionDetails({ r, onClose, returnFocusTo }: { r: Release; onClose: () => void; returnFocusTo?: HTMLElement | null }) {
   const c = compatOf(r.version);
-  const ref = useRef<HTMLElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    closeRef.current?.focus();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  const onKeyDown = (e: ReactKeyboardEvent) => {
-    if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
-    if (e.key !== 'Tab' || !ref.current) return;
-    const f = ref.current.querySelectorAll<HTMLElement>('button, a[href], [tabindex]:not([tabindex="-1"])');
-    if (!f.length) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  };
 
   return (
-    <div className="drawer-root" onKeyDown={onKeyDown}>
-      <div className="scrim" onClick={onClose} />
-      <aside ref={ref} className="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-        <header className="drawer-head">
-          <div>
-            <div className="label">Version</div>
-            <h2 id="drawer-title">{r.version} {r.latest && <span className="status current">Current</span>}{r.deprecated && <span className="status deprecated">Deprecated</span>}</h2>
-            <div className="sub">{r.date ? `Released ${shortDay(r.date)}` : 'Release date unavailable'}</div>
-          </div>
-          <button ref={closeRef} className="icon-btn" onClick={onClose} aria-label="Close details"><Icon name="close" /></button>
-        </header>
-
-        <div className="drawer-body">
+    <SlideOver
+      onClose={onClose}
+      returnFocusTo={returnFocusTo}
+      closeLabel="Close details"
+      eyebrow="Version"
+      title={<>{r.version} {r.latest && <span className="status current">Current</span>}{r.deprecated && <span className="status deprecated">Deprecated</span>}</>}
+      subtitle={r.date ? `Released ${shortDay(r.date)}` : 'Release date unavailable'}
+      footer={
+        <>
+          <button className="btn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
+          <a className="btn" href={`${NPM_PAGE}/v/${r.version}`} target="_blank" rel="noreferrer">Get NPM <Icon name="arrow" /></a>
+        </>
+      }
+    >
+        <div className="details">
           <pre className="cmd">npm install {PKG}@{r.version}</pre>
           <div className="stats">
             <div><span>Unpacked</span><strong>{kb(r.unpacked)}</strong></div>
@@ -294,28 +279,7 @@ function Drawer({ r, onClose }: { r: Release; onClose: () => void }) {
             {c.notes.map((n) => <p key={n} className="muted small">• {n}</p>)}
           </section>
         </div>
-
-        <footer className="drawer-foot">
-          <button className="btn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
-          <a className="btn" href={`${NPM_PAGE}/v/${r.version}`} target="_blank" rel="noreferrer">Get NPM <Icon name="arrow" /></a>
-        </footer>
-      </aside>
-    </div>
-  );
-}
-
-/* ───────────── Other views ───────────── */
-
-function Skills() {
-  return (
-    <section className="card pad">
-      <h2>AI skill files</h2>
-      <p className="muted">
-        A skill tells an AI assistant to build UI only with this package’s components and styles, and when a different design is needed, to reuse
-        the same component and adapt its design instead of replacing it.
-      </p>
-      <div className="result warn">No skill file has been published yet. When one exists (planned at <code>skills/evoke-ui-design/SKILL.md</code> inside the package), it will be listed here with Copy and Download.</div>
-    </section>
+    </SlideOver>
   );
 }
 
@@ -323,7 +287,6 @@ function Skills() {
 
 export default function App() {
   const { releases, state } = useReleases();
-  const [view, setView] = useState<'versions' | 'skills'>('versions');
   const [open, setOpen] = useState<string>();
   const trigger = useRef<HTMLElement | null>(null);
 
@@ -331,7 +294,7 @@ export default function App() {
   const selected = releases.find((r) => r.version === open);
 
   const openDrawer = (v: string, el: HTMLElement) => { trigger.current = el; setOpen(v); };
-  const closeDrawer = () => { setOpen(undefined); setTimeout(() => trigger.current?.focus(), 0); };
+  const closeDrawer = () => setOpen(undefined);
 
   return (
     <div className="page">
@@ -350,24 +313,16 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="tabs" aria-label="Sections">
-        {(['versions', 'skills'] as const).map((v) => (
-          <button key={v} className={view === v ? 'on' : ''} aria-current={view === v ? 'page' : undefined} onClick={() => setView(v)}>
-            {v === 'versions' ? 'Versions' : 'AI Skills'}
-          </button>
-        ))}
-      </nav>
-
       <main>
-        {!current ? <p>Loading…</p> : view === 'versions' ? (
+        {!current ? <p>Loading…</p> : (
           <>
             <Summary current={current} count={releases.length} />
             <History releases={releases} onOpen={openDrawer} />
           </>
-        ) : <Skills />}
+        )}
       </main>
 
-      {selected && <Drawer r={selected} onClose={closeDrawer} />}
+      {selected && <VersionDetails r={selected} onClose={closeDrawer} returnFocusTo={trigger.current} />}
     </div>
   );
 }

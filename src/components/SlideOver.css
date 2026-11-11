@@ -1,0 +1,31 @@
+/* SlideOver: generic right-hand panel. Override the custom properties to restyle it. */
+.slideover-root {
+  --slideover-bg: #fff;
+  --slideover-border: #e4e6ec;
+  --slideover-scrim: rgba(11, 21, 96, 0.35);
+  --slideover-muted: #5f6672;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+.slideover-scrim { position: absolute; inset: 0; background: var(--slideover-scrim); animation: slideover-fade 0.2s ease-out; }
+.slideover {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  background: var(--slideover-bg);
+  display: flex; flex-direction: column;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.15);
+  animation: slideover-in 0.25s ease-out;
+}
+.slideover-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 24px 28px 16px; border-bottom: 1px solid var(--slideover-border); }
+.slideover-eyebrow { color: var(--slideover-muted); font-size: 0.85rem; margin-bottom: 6px; }
+.slideover-title { margin: 0; font-size: 1.8rem; letter-spacing: -0.01em; }
+.slideover-subtitle { color: var(--slideover-muted); font-size: 0.8rem; margin-top: 6px; }
+.slideover-close { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; color: inherit; flex: none; }
+.slideover-close:hover { background: #eceef4; }
+.slideover-close:focus-visible { outline: 2px solid #0b1560; outline-offset: 2px; }
+.slideover-body { padding: 20px 28px; overflow-y: auto; flex: 1; }
+.slideover-foot { display: flex; gap: 10px; padding: 16px 28px; border-top: 1px solid var(--slideover-border); }
+
+@keyframes slideover-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes slideover-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .slideover, .slideover-scrim { animation: none; } }

@@ -16,6 +16,30 @@ npm run build
 | Frameworks, styling libraries, components per version | `src/data/compat.ts` (edit at each release) |
 | Release notes (the **Download .md** file) | `changelogs/<version>.md` |
 
+## Reusable slide-over panel
+
+`src/components/SlideOver.tsx` is a generic panel that slides in from the right. Render it only while it should be open:
+
+```tsx
+import { SlideOver } from './components/SlideOver';
+
+{open && (
+  <SlideOver
+    title="Edit project"
+    eyebrow="Settings"          // optional small label above the title
+    subtitle="Last saved today" // optional
+    width="480px"               // optional, default 560px
+    onClose={() => setOpen(false)}
+    returnFocusTo={buttonEl}    // optional, defaults to whatever had focus when it opened
+    footer={<button onClick={save}>Save</button>} // optional fixed bottom bar
+  >
+    …any content…
+  </SlideOver>
+)}
+```
+
+It handles Esc and click-outside to close, keeps keyboard focus inside the panel, returns focus on close, locks page scroll and respects reduced motion. Colors can be changed with the `--slideover-*` custom properties in `SlideOver.css`.
+
 ## Adding release notes for a new version
 
 1. Publish the new version to npm, for example `0.3.0`.
