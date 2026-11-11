@@ -19,7 +19,6 @@ const LABEL: Record<Status, string> = { tested: 'Tested', expected: 'Expected', 
 
 const empty: Compat = { frameworks: [], styling: [], components: [], notes: ['No compatibility data recorded for this version.'] };
 const compatOf = (v: string): Compat => COMPAT[v] ?? empty;
-const find = (list: Entry[], name: string): Entry | undefined => list.find((e) => e.name === name);
 const kb = (n?: number) => (n ? `${(n / 1024).toFixed(0)} KB` : '—');
 const shortDay = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
@@ -63,8 +62,20 @@ ${c.components.map((x) => `- evoke-${x}`).join('\n') || '- Not recorded'}
 ${c.notes.length ? `\n## Notes\n\n${c.notes.map((n) => `- ${n}`).join('\n')}\n` : ''}`;
 }
 
+/**
+ * Hand-written release notes: every changelogs/<version>.md file is bundled at build time.
+ * The file name (without .md) must equal the npm version, e.g. changelogs/0.3.0.md.
+ */
+const NOTE_FILES = import.meta.glob('../changelogs/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const NOTES: Record<string, string> = Object.fromEntries(
+  Object.entries(NOTE_FILES).map(([path, text]) => [path.split('/').pop()!.replace(/\.md$/, ''), text]),
+);
+
+/** Your own file if there is one, otherwise a summary generated from the dashboard data. */
+const markdownFor = (r: Release) => NOTES[r.version] ?? changelogMarkdown(r);
+
 function downloadMd(r: Release) {
-  const url = URL.createObjectURL(new Blob([changelogMarkdown(r)], { type: 'text/markdown' }));
+  const url = URL.createObjectURL(new Blob([markdownFor(r)], { type: 'text/markdown' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = `evoke-ui-kit-${r.version}.md`;
@@ -98,6 +109,7 @@ function useReleases() {
       .then((d) => {
         const latest = d['dist-tags']?.latest;
         const list: Release[] = Object.keys(d.versions)
+          .filter((v) => !v.includes('-')) // hide pre-release builds such as 0.0.0-stage
           .map((v) => ({
             version: v,
             date: d.time?.[v] ?? '',
@@ -294,42 +306,6 @@ function Drawer({ r, onClose }: { r: Release; onClose: () => void }) {
 
 /* ───────────── Other views ───────────── */
 
-function Compare({ releases }: { releases: Release[] }) {
-  const [a, setA] = useState(releases[1]?.version ?? releases[0]?.version);
-  const [b, setB] = useState(releases[0]?.version);
-  const ca = compatOf(a), cb = compatOf(b);
-  const added = cb.components.filter((x) => !ca.components.includes(x));
-  const removed = ca.components.filter((x) => !cb.components.includes(x));
-  const rows = (kind: 'frameworks' | 'styling') =>
-    ca[kind].concat(cb[kind].filter((e) => !find(ca[kind], e.name))).map((e) => {
-      const x = find(ca[kind], e.name), y = find(cb[kind], e.name);
-      const changed = x?.version !== y?.version || x?.status !== y?.status;
-      return (
-        <tr key={e.name} className={changed ? 'changed' : ''}>
-          <td>{e.name}</td>
-          <td>{x ? <>{x.version} <Pill status={x.status} /></> : '—'}</td>
-          <td>{y ? <>{y.version} <Pill status={y.status} /></> : '—'}</td>
-        </tr>
-      );
-    });
-  return (
-    <section className="card pad">
-      <h2>Compare versions</h2>
-      <div className="row">
-        <label>From <select value={a} onChange={(e) => setA(e.target.value)}>{releases.map((r) => <option key={r.version}>{r.version}</option>)}</select></label>
-        <label>To <select value={b} onChange={(e) => setB(e.target.value)}>{releases.map((r) => <option key={r.version}>{r.version}</option>)}</select></label>
-      </div>
-      <p><strong>{added.length}</strong> components added, <strong>{removed.length}</strong> removed.</p>
-      {added.length > 0 && <div className="chips">{added.map((x) => <span key={x} className="chip add">+ evoke-{x}</span>)}</div>}
-      <table className="plain">
-        <thead><tr><th>Support</th><th>{a}</th><th>{b}</th></tr></thead>
-        <tbody>{rows('frameworks')}{rows('styling')}</tbody>
-      </table>
-      <p className="muted small">Highlighted rows changed between the two versions.</p>
-    </section>
-  );
-}
-
 function Skills() {
   return (
     <section className="card pad">
@@ -347,7 +323,7 @@ function Skills() {
 
 export default function App() {
   const { releases, state } = useReleases();
-  const [view, setView] = useState<'versions' | 'compare' | 'skills'>('versions');
+  const [view, setView] = useState<'versions' | 'skills'>('versions');
   const [open, setOpen] = useState<string>();
   const trigger = useRef<HTMLElement | null>(null);
 
@@ -375,9 +351,9 @@ export default function App() {
       </header>
 
       <nav className="tabs" aria-label="Sections">
-        {(['versions', 'compare', 'skills'] as const).map((v) => (
+        {(['versions', 'skills'] as const).map((v) => (
           <button key={v} className={view === v ? 'on' : ''} aria-current={view === v ? 'page' : undefined} onClick={() => setView(v)}>
-            {v === 'versions' ? 'Versions' : v === 'compare' ? 'Compare' : 'AI Skills'}
+            {v === 'versions' ? 'Versions' : 'AI Skills'}
           </button>
         ))}
       </nav>
@@ -388,7 +364,7 @@ export default function App() {
             <Summary current={current} count={releases.length} />
             <History releases={releases} onOpen={openDrawer} />
           </>
-        ) : view === 'compare' ? <Compare releases={releases} /> : <Skills />}
+        ) : <Skills />}
       </main>
 
       {selected && <Drawer r={selected} onClose={closeDrawer} />}

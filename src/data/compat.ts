@@ -50,10 +50,10 @@ export const COMPAT: Record<string, Compat> = {
   },
   '0.1.0': {
     frameworks: [
-      { name: 'Angular', version: '—', status: 'unknown' },
+      { name: 'Angular', version: '—', status: 'tested', note: 'Recorded by the maintainer; exact version not kept' },
       { name: 'React', version: '—', status: 'unknown' },
-      { name: 'Vue', version: '—', status: 'unknown' },
-      { name: 'Plain HTML', version: '—', status: 'unknown' },
+      { name: 'Vue', version: '—', status: 'tested', note: 'Recorded by the maintainer; exact version not kept' },
+      { name: 'Plain HTML', version: '—', status: 'tested', note: 'Recorded by the maintainer; exact version not kept' },
     ],
     styling: [
       { name: 'Plain CSS (default Evoke look)', version: '—', status: 'unknown' },
