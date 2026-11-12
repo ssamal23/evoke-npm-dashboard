@@ -1,0 +1,24 @@
+.gn-field { display: grid; gap: 6px; margin-bottom: 16px; }
+.gn-field-label { font-size: 0.9rem; font-weight: 500; color: #1f2430; margin-bottom: 6px; }
+.gn-field .gn-field-label { margin-bottom: 0; }
+.gn-input { height: 48px; padding: 0 16px; border: 1px solid #c9ced8; border-radius: 12px; font: inherit; font-size: 0.95rem; background: #fff; color: #1a1a1a; width: 100%; }
+.gn-input::placeholder { color: #7b8190; }
+.gn-input:focus-visible { outline: 2px solid #2f5be7; outline-offset: 1px; border-color: #2f5be7; }
+.gn-input.invalid { border: 2px solid #a8281a; padding: 0 15px; }
+.gn-error { margin: 0; display: flex; align-items: center; gap: 6px; color: #a8281a; font-size: 0.85rem; }
+
+.gn-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.gn-actions.between { justify-content: space-between; align-items: center; margin-top: 22px; }
+.gn-btn { height: 44px; padding: 0 24px; border-radius: 12px; border: 1px solid #c9ced8; background: #fff; color: #1a1a1a; font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+.gn-btn:hover { background: #f4f5f8; }
+.gn-btn.primary { background: #2f5be7; border-color: #2f5be7; color: #fff; }
+.gn-btn.primary:hover { background: #2549c4; }
+.gn-btn:focus-visible { outline: 2px solid #0b1560; outline-offset: 2px; }
+
+.gn-command { display: flex; align-items: stretch; background: #15171c; border-radius: 12px; overflow: hidden; }
+.gn-command code { flex: 1; min-width: 0; padding: 14px 16px; color: #fff; font-family: ui-monospace, Consolas, monospace; font-size: 0.9rem; overflow-x: auto; white-space: nowrap; }
+.gn-copy { border: 0; border-left: 1px solid #2a2e37; background: #23262e; color: #fff; padding: 0 18px; font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; min-width: 92px; }
+.gn-copy:hover { background: #2d313b; }
+.gn-copy:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.gn-link { color: #1a4fd6; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.gn-link:hover { color: #0b1560; }

@@ -1,0 +1,38 @@
+/* Modal: centred dialog. Override the custom properties to restyle it. */
+.modal-root {
+  --modal-bg: #fff;
+  --modal-scrim: rgba(24, 26, 32, 0.55);
+  --modal-muted: #4b5260;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.modal-scrim { position: absolute; inset: 0; background: var(--modal-scrim); animation: modal-fade 0.15s ease-out; }
+.modal {
+  position: relative;
+  background: var(--modal-bg);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  animation: modal-pop 0.18s ease-out;
+}
+.modal-head { display: flex; align-items: flex-start; gap: 14px; }
+.modal-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; }
+.modal-icon.blue { background: #e4ebfb; color: #1e3a9e; }
+.modal-icon.green { background: #def3e5; color: #12683a; }
+.modal-heading { flex: 1; min-width: 0; }
+.modal-heading h2 { margin: 0; font-size: 1.15rem; font-weight: 600; line-height: 1.3; }
+.modal-heading p { margin: 4px 0 0; color: var(--modal-muted); font-size: 0.9rem; line-height: 1.4; }
+.modal-close { flex: none; display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; color: inherit; }
+.modal-close:hover { background: #eceef4; }
+.modal-close:focus-visible { outline: 2px solid #1e3a9e; outline-offset: 2px; }
+.modal-body { margin-top: 20px; }
+
+@keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .modal, .modal-scrim { animation: none; } }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { SlideOver } from './components/SlideOver';
+import { GetNpmDialog } from './GetNpmDialog';
 import { COMPAT, type Compat, type Entry, type Status } from './data/compat';
 
 const PKG = '@evoke-tech/stencil-ui-kit';
@@ -161,7 +162,7 @@ function Summary({ current, count }: { current: Release; count: number }) {
   );
 }
 
-function History({ releases, onOpen }: { releases: Release[]; onOpen: (v: string, el: HTMLElement) => void }) {
+function History({ releases, onOpen, onGetNpm }: { releases: Release[]; onOpen: (v: string, el: HTMLElement) => void; onGetNpm: (v: string, el: HTMLElement) => void }) {
   return (
     <section className="card history">
       <div className="history-head">
@@ -202,9 +203,9 @@ function History({ releases, onOpen }: { releases: Release[]; onOpen: (v: string
                   </button>
                 </td>
                 <td className="center">
-                  <a className="btn" href={`${NPM_PAGE}/v/${r.version}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="btn" aria-haspopup="dialog" onClick={(e) => { e.stopPropagation(); onGetNpm(r.version, e.currentTarget); }}>
                     Get NPM <Icon name="arrow" />
-                  </a>
+                  </button>
                 </td>
                 <td>{tested.length ? tested.join(', ') : <span className="muted">Not recorded</span>}</td>
               </tr>
@@ -293,6 +294,10 @@ export default function App() {
   const current = releases.find((r) => r.latest) ?? releases[0];
   const selected = releases.find((r) => r.version === open);
 
+  const [npmFor, setNpmFor] = useState<string>();
+  const npmTrigger = useRef<HTMLElement | null>(null);
+  const openGetNpm = (v: string, el: HTMLElement) => { npmTrigger.current = el; setNpmFor(v); };
+
   const openDrawer = (v: string, el: HTMLElement) => { trigger.current = el; setOpen(v); };
   const closeDrawer = () => setOpen(undefined);
 
@@ -317,10 +322,20 @@ export default function App() {
         {!current ? <p>Loading…</p> : (
           <>
             <Summary current={current} count={releases.length} />
-            <History releases={releases} onOpen={openDrawer} />
+            <History releases={releases} onOpen={openDrawer} onGetNpm={openGetNpm} />
           </>
         )}
       </main>
+
+      {npmFor && (
+        <GetNpmDialog
+          version={npmFor}
+          packageName={PKG}
+          npmUrl={`${NPM_PAGE}/v/${npmFor}`}
+          onClose={() => setNpmFor(undefined)}
+          returnFocusTo={npmTrigger.current}
+        />
+      )}
 
       {selected && <VersionDetails r={selected} onClose={closeDrawer} returnFocusTo={trigger.current} />}
     </div>

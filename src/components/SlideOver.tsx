@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
+import { useDialog } from './useDialog';
 import './SlideOver.css';
 
 export interface SlideOverProps {
@@ -22,8 +23,6 @@ export interface SlideOverProps {
   returnFocusTo?: HTMLElement | null;
 }
 
-const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
 /**
  * A panel that slides in from the right over a dimmed background.
  * Render it only while it should be open: `{open && <SlideOver ...>}`.
@@ -45,40 +44,7 @@ export function SlideOver({
   const titleId = useId();
   const panel = useRef<HTMLElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
-  const opener = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    opener.current = document.activeElement as HTMLElement | null;
-    closeButton.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      const target = returnFocusTo ?? opener.current;
-      setTimeout(() => target?.focus(), 0);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      onClose();
-      return;
-    }
-    if (e.key !== 'Tab' || !panel.current) return;
-    const items = panel.current.querySelectorAll<HTMLElement>(FOCUSABLE);
-    if (!items.length) return;
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  };
+  const onKeyDown = useDialog(panel, onClose, { returnFocusTo, initialFocus: () => closeButton.current });
 
   return (
     <div className="slideover-root" onKeyDown={onKeyDown}>
