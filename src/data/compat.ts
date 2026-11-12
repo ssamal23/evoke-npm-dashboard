@@ -22,6 +22,7 @@ export interface Entry {
 export interface Compat {
   frameworks: Entry[];
   styling: Entry[];
+  /** Offline fallback only. The dashboard reads the real list from the published package (see App.tsx). */
   components: string[];
   notes: string[];
 }
@@ -46,7 +47,7 @@ export const COMPAT: Record<string, Compat> = {
       { name: 'Angular Material', version: '22.2 (M3)', status: 'tested', note: 'Colors match mat-flat-button. 0.2.0 has two cosmetic issues (pill-shaped cards/alerts, serif font without Roboto), fixed in the next release' },
     ],
     components: ALL_20,
-    notes: ['20 components, two variants each', 'WCAG: white text on #ff5316 is 3.23:1 (below AA 4.5:1) – see README'],
+    notes: ['Two variants per component','WCAG: white text on #ff5316 is 3.23:1 (below AA 4.5:1) – see README'],
   },
   '0.1.0': {
     frameworks: [
@@ -61,7 +62,7 @@ export const COMPAT: Record<string, Compat> = {
       { name: 'Bootstrap', version: '—', status: 'unknown' },
       { name: 'Angular Material', version: '—', status: 'unknown' },
     ],
-    components: ['button', 'input', 'select', 'checkbox', 'radio-group'],
-    notes: ['Early release. Component list is approximate and compatibility was not recorded.'],
+    components: ['button', 'input', 'select', 'checkbox', 'radio-group', 'card', 'alert', 'modal'],
+    notes: ['Early release. Compatibility was not recorded.'],
   },
 };

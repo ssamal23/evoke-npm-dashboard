@@ -21,6 +21,8 @@ export interface SlideOverProps {
   closeLabel?: string;
   /** Element to focus after closing. Defaults to whatever had focus when the panel opened. */
   returnFocusTo?: HTMLElement | null;
+  /** Extra class on the outer element, handy for overriding the --slideover-* custom properties. */
+  className?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export function SlideOver({
   width = '560px',
   closeLabel = 'Close',
   returnFocusTo,
+  className,
 }: SlideOverProps) {
   const titleId = useId();
   const panel = useRef<HTMLElement>(null);
@@ -47,7 +50,7 @@ export function SlideOver({
   const onKeyDown = useDialog(panel, onClose, { returnFocusTo, initialFocus: () => closeButton.current });
 
   return (
-    <div className="slideover-root" onKeyDown={onKeyDown}>
+    <div className={className ? `slideover-root ${className}` : 'slideover-root'} onKeyDown={onKeyDown}>
       <div className="slideover-scrim" onClick={onClose} />
       <aside
         ref={panel}

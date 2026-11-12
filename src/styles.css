@@ -75,19 +75,7 @@ select { height: 40px; padding: 0 10px; border: 1px solid #8a8f9a; border-radius
 table.plain { width: 100%; border-collapse: collapse; } table.plain td, table.plain th { padding: 9px 6px; border-bottom: 1px solid #eee; text-align: left; }
 tr.changed { background: #fff4e0; }
 
-/* version details (content of the SlideOver) */
-.details { display: grid; gap: 20px; align-content: start; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.stats div { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
-.stats span { color: var(--muted); font-size: .75rem; } .stats strong { font-size: 1.05rem; }
-.block h3 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-.count { background: #eceef4; border-radius: 999px; font-size: .75rem; padding: 1px 8px; font-weight: 600; }
-.entries { list-style: none; margin: 0; padding: 0; }
-.entries li { padding: 10px 0; border-bottom: 1px solid var(--border); }
-.entry-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.entry-ver { color: var(--muted); margin-right: auto; }
-.entries p { margin-top: 4px; }
-.callout { background: #fdebd0; color: #7a4600; border-radius: 10px; padding: 10px 14px; font-size: .9rem; }
+/* Content of the version-details slide-over lives in VersionDetails.css */
 
 @media (max-width: 900px) {
   .page { padding: 24px 16px 48px; }

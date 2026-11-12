@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { SlideOver } from './components/SlideOver';
 import { GetNpmDialog } from './GetNpmDialog';
+import { ComponentGallery } from './ComponentGallery';
+import { loadRegistrations } from './registrations';
+import './VersionDetails.css';
 import { COMPAT, type Compat, type Entry, type Status } from './data/compat';
 
 const PKG = '@evoke-tech/stencil-ui-kit';
@@ -58,9 +61,9 @@ ${rows(c.frameworks)}
 | --- | --- | --- | --- |
 ${rows(c.styling)}
 
-## Components (${c.components.length})
+## Components (${componentsOf(r.version).length})
 
-${c.components.map((x) => `- evoke-${x}`).join('\n') || '- Not recorded'}
+${componentsOf(r.version).map((x) => `- evoke-${x}`).join('\n') || '- Not recorded'}
 ${c.notes.length ? `\n## Notes\n\n${c.notes.map((n) => `- ${n}`).join('\n')}\n` : ''}`;
 }
 
@@ -102,6 +105,40 @@ function Pill({ status }: { status: Status }) {
   return <span className={`pill ${status}`}>{LABEL[status]}</span>;
 }
 
+/**
+ * Component list read from the published package itself, so a new component shows up
+ * as soon as the version is on npm. Falls back to src/data/compat.ts when unpkg is unreachable.
+ * Each package ships dist/types/components.d.ts, which lists every tag in HTMLElementTagNameMap.
+ */
+const liveComponents: Record<string, string[]> = {};
+const componentsOf = (v: string) => liveComponents[v] ?? compatOf(v).components;
+
+async function fetchComponents(version: string): Promise<string[]> {
+  const res = await fetch(`https://unpkg.com/${PKG}@${version}/dist/types/components.d.ts`);
+  if (!res.ok) throw new Error(String(res.status));
+  const text = await res.text();
+  const block = text.match(/interface HTMLElementTagNameMap\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';
+  const names = [...block.matchAll(/"evoke-([a-z0-9-]+)"\s*:/g)].map((m) => m[1]);
+  if (!names.length) throw new Error('no components found');
+  return names;
+}
+
+/** Loads the component list of every release once. Returns a counter that changes when data arrives. */
+function useLiveComponents(releases: Release[]) {
+  const [loaded, setLoaded] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    for (const r of releases) {
+      if (liveComponents[r.version]) continue;
+      fetchComponents(r.version)
+        .then((names) => { liveComponents[r.version] = names; if (!cancelled) setLoaded((n) => n + 1); })
+        .catch(() => { /* keep the local fallback for this version */ });
+    }
+    return () => { cancelled = true; };
+  }, [releases]);
+  return loaded;
+}
+
 function useReleases() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [state, setState] = useState<'loading' | 'live' | 'error'>('loading');
@@ -137,7 +174,7 @@ function useReleases() {
 /* ───────────── Summary + history ───────────── */
 
 function Summary({ current, count }: { current: Release; count: number }) {
-  const c = compatOf(current.version);
+  const components = componentsOf(current.version);
   return (
     <section className="card summary" aria-label="Current version">
       <div>
@@ -147,7 +184,7 @@ function Summary({ current, count }: { current: Release; count: number }) {
       </div>
       <div>
         <div className="label">Components</div>
-        <div className="big">{c.components.length || '—'}</div>
+        <div className="big">{components.length || '—'}</div>
         <div className="sub">evoke-* web components</div>
       </div>
       <div>
@@ -219,67 +256,140 @@ function History({ releases, onOpen, onGetNpm }: { releases: Release[]; onOpen: 
 
 /* ───────────── Right-side drawer ───────────── */
 
-function EntryList({ title, list }: { title: string; list: Entry[] }) {
+/** Theme file each styling library uses, from the package's src/themes folder. */
+const THEME_FILE: Record<string, string> = {
+  'Plain CSS (default Evoke look)': 'themes/tokens.css',
+  'Tailwind CSS': 'themes/tailwind.css',
+  Bootstrap: 'themes/bootstrap.css',
+  'Angular Material': 'themes/material.css',
+};
+
+const dash = (s: string) => (s && s !== '—' ? s : '—');
+
+/** Entries that carry a note, shown under their table so nothing recorded is lost. */
+function Notes({ list }: { list: Entry[] }) {
+  const noted = list.filter((e) => e.note);
+  if (!noted.length) return null;
   return (
-    <section className="block">
-      <h3>{title}</h3>
-      {list.length === 0 ? <p className="muted">No data.</p> : (
-        <ul className="entries">
-          {list.map((e) => (
-            <li key={e.name}>
-              <div className="entry-main">
-                <strong>{e.name}</strong>
-                <span className="entry-ver">{e.version}</span>
-                <Pill status={e.status} />
-              </div>
-              {e.note && <p className="muted small">{e.note}</p>}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <ul className="dnotes" aria-label="Notes">
+      {noted.map((e) => <li key={e.name}><strong>{e.name}:</strong> {e.note}</li>)}
+    </ul>
   );
 }
 
 /** Details of one release, shown inside the reusable SlideOver panel. */
-function VersionDetails({ r, onClose, returnFocusTo }: { r: Release; onClose: () => void; returnFocusTo?: HTMLElement | null }) {
+function VersionDetails({ r, releases, onClose, onGetNpm, returnFocusTo }: {
+  r: Release;
+  releases: Release[];
+  onClose: () => void;
+  onGetNpm: (v: string, el: HTMLElement) => void;
+  returnFocusTo?: HTMLElement | null;
+}) {
   const c = compatOf(r.version);
+
+  // Newest older release we have component data for, to work out what is new here.
+  const components = componentsOf(r.version);
+  const previous = releases.find((x) => cmpVersion(x.version, r.version) < 0 && componentsOf(x.version).length);
+  const before = new Set(previous ? componentsOf(previous.version) : []);
+  const added = new Set(previous ? components.filter((n) => !before.has(n)) : []);
+  const live = !!liveComponents[r.version];
+
+  // Read on every render so a registration made from the Get NPM dialog shows up straight away.
+  const clients = loadRegistrations()
+    .filter((x) => x.version === r.version)
+    .filter((x, i, all) => all.findIndex((y) => y.client === x.client && y.project === x.project) === i);
+
+  const summary = (!components.length
+    ? 'No component list recorded for this version.'
+    : previous
+      ? `${components.length} components · ${added.size} new since ${previous.version}, marked New.`
+      : `${components.length} components.`) + (components.length && !live ? ' From local data: could not read the published package.' : '');
 
   return (
     <SlideOver
+      className="details-panel"
+      width="600px"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       closeLabel="Close details"
-      eyebrow="Version"
-      title={<>{r.version} {r.latest && <span className="status current">Current</span>}{r.deprecated && <span className="status deprecated">Deprecated</span>}</>}
-      subtitle={r.date ? `Released ${shortDay(r.date)}` : 'Release date unavailable'}
-      footer={
-        <>
-          <button className="btn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
-          <a className="btn" href={`${NPM_PAGE}/v/${r.version}`} target="_blank" rel="noreferrer">Get NPM <Icon name="arrow" /></a>
-        </>
-      }
+      eyebrow="Version details"
+      title={<>v{r.version} {r.latest && <span className="status current">Current</span>}{r.deprecated && <span className="status deprecated">Deprecated</span>}</>}
     >
-        <div className="details">
-          <pre className="cmd">npm install {PKG}@{r.version}</pre>
-          <div className="stats">
-            <div><span>Unpacked</span><strong>{kb(r.unpacked)}</strong></div>
-            <div><span>Files</span><strong>{r.files ?? '—'}</strong></div>
-            <div><span>Stencil</span><strong>{r.stencil ?? '—'}</strong></div>
+      <div className="details">
+        <section className="dcard" aria-label="Release summary">
+          <div className="dmeta">
+            <dl>
+              <div><dt>Released</dt><dd>{shortDay(r.date)}</dd></div>
+              <div><dt>Projects using</dt><dd>{clients.length}</dd></div>
+              <div><dt>Status</dt><dd>{r.deprecated ? 'Deprecated' : r.latest ? 'Current' : 'Previous'}</dd></div>
+            </dl>
+            <div className="dmeta-actions">
+              <button type="button" className="dbtn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
+              <button type="button" className="dbtn primary" aria-haspopup="dialog" onClick={(e) => onGetNpm(r.version, e.currentTarget)}>
+                Get NPM <Icon name="arrow" />
+              </button>
+            </div>
           </div>
-          {r.deprecated && <div className="callout">Deprecated: {r.deprecated}</div>}
+          {r.deprecated && <div className="dcallout">Deprecated: {r.deprecated}</div>}
+        </section>
 
-          <EntryList title="Frameworks" list={c.frameworks} />
-          <EntryList title="Styling libraries" list={c.styling} />
+        <section className="dcard" aria-labelledby="d-frameworks">
+          <h3 id="d-frameworks">Frameworks</h3>
+          <p className="dsub">Framework versions this release was tested with.</p>
+          <table className="dtable">
+            <thead><tr><th>Framework</th><th>Tested with</th><th>Status</th></tr></thead>
+            <tbody>
+              {c.frameworks.map((e) => (
+                <tr key={e.name}><td>{e.name}</td><td className={e.version === '—' ? 'dmuted' : undefined}>{dash(e.version)}</td><td><Pill status={e.status} /></td></tr>
+              ))}
+            </tbody>
+          </table>
+          {!c.frameworks.length && <p className="dsub">No data.</p>}
+          <div className="dlegend">
+            <span><span className="pill tested">Tested</span> Run in a real app</span>
+            <span><span className="pill expected">Expected</span> Web component, not yet tested</span>
+          </div>
+          <Notes list={c.frameworks} />
+        </section>
 
-          <section className="block">
-            <h3>Components <span className="count">{c.components.length}</span></h3>
-            {c.components.length ? (
-              <div className="chips">{c.components.map((x) => <span key={x} className="chip">evoke-{x}</span>)}</div>
-            ) : <p className="muted">Not recorded.</p>}
-            {c.notes.map((n) => <p key={n} className="muted small">• {n}</p>)}
-          </section>
-        </div>
+        <section className="dcard" aria-labelledby="d-styling">
+          <h3 id="d-styling">Styling libraries</h3>
+          <p className="dsub">Theme files shipped and the library versions they map to.</p>
+          <table className="dtable">
+            <thead><tr><th>Library</th><th>Theme file</th><th>Version</th><th>Status</th></tr></thead>
+            <tbody>
+              {c.styling.map((e) => (
+                <tr key={e.name}>
+                  <td>{e.name.replace(' (default Evoke look)', '')}</td>
+                  <td>{THEME_FILE[e.name] ? <code>{THEME_FILE[e.name]}</code> : <span className="dmuted">—</span>}</td>
+                  <td className={e.version === '—' ? 'dmuted' : undefined}>{dash(e.version)}</td>
+                  <td><Pill status={e.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!c.styling.length && <p className="dsub">No data.</p>}
+          <Notes list={c.styling} />
+        </section>
+
+        <section className="dcard" aria-labelledby="d-clients">
+          <h3 id="d-clients">Clients / projects using this version</h3>
+          {clients.length ? (
+            <ul className="dclients">
+              {clients.map((x) => <li key={`${x.client}|${x.project}`}><strong>{x.client}</strong><span>{x.project}</span></li>)}
+            </ul>
+          ) : (
+            <p className="dsub dclients-empty">No one has registered yet. Use Get NPM to add a client and project. Entries are saved in this browser only.</p>
+          )}
+        </section>
+
+        <ComponentGallery components={components} added={added} summary={summary} />
+        {c.notes.length > 0 && (
+          <ul className="dnotes" aria-label="Release notes">
+            {c.notes.map((n) => <li key={n}>{n}</li>)}
+          </ul>
+        )}
+      </div>
     </SlideOver>
   );
 }
@@ -288,6 +398,7 @@ function VersionDetails({ r, onClose, returnFocusTo }: { r: Release; onClose: ()
 
 export default function App() {
   const { releases, state } = useReleases();
+  useLiveComponents(releases); // re-renders the app when a version's component list arrives
   const [open, setOpen] = useState<string>();
   const trigger = useRef<HTMLElement | null>(null);
 
@@ -327,6 +438,9 @@ export default function App() {
         )}
       </main>
 
+      {selected && <VersionDetails r={selected} releases={releases} onClose={closeDrawer} onGetNpm={openGetNpm} returnFocusTo={trigger.current} />}
+
+      {/* After the drawer so it stacks on top when opened from inside it. */}
       {npmFor && (
         <GetNpmDialog
           version={npmFor}
@@ -336,8 +450,6 @@ export default function App() {
           returnFocusTo={npmTrigger.current}
         />
       )}
-
-      {selected && <VersionDetails r={selected} onClose={closeDrawer} returnFocusTo={trigger.current} />}
     </div>
   );
 }
