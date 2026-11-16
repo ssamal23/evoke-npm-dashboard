@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { SlideOver } from './components/SlideOver';
 import { GetNpmDialog } from './GetNpmDialog';
 import { ComponentGallery } from './ComponentGallery';
@@ -308,7 +308,7 @@ function VersionDetails({ r, releases, onClose, onGetNpm, returnFocusTo }: {
   return (
     <SlideOver
       className="details-panel"
-      width="600px"
+      width="700px"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       closeLabel="Close details"

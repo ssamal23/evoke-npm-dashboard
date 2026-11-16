@@ -43,7 +43,7 @@ export function SlideOver({
   closeLabel = 'Close',
   returnFocusTo,
   className,
-}: SlideOverProps) {
+}: Readonly<SlideOverProps>) {
   const titleId = useId();
   const panel = useRef<HTMLElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
