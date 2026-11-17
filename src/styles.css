@@ -17,7 +17,7 @@ code, pre { font-family: ui-monospace, Consolas, monospace; }
 .page { max-width: 1280px; margin: 0 auto; padding: 40px 80px 64px; display: grid; gap: 20px; }
 .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: .75rem; font-weight: 500; color: var(--muted); }
-h1 { font-size: 2.5rem; font-weight: 500; letter-spacing: -0.02em; margin-top: 4px; }
+h1 { font-size: 2.5rem; font-weight: 400; letter-spacing: -0.02em; margin-top: 4px; }
 .top-meta { text-align: right; color: var(--muted); font-size: .9rem; display: grid; gap: 4px; }
 .source { font-size: .75rem; } .source.error { color: var(--warn); }
 
