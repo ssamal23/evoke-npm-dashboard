@@ -3,7 +3,7 @@ import { SlideOver } from './components/SlideOver';
 import { GetNpmDialog, type SaveResult } from './GetNpmDialog';
 import { ComponentGallery } from './ComponentGallery';
 import { loadRegistrations, saveRegistration } from './registrations';
-import { addProject, appliesTo, fetchProjects, sharedListReadable, sharedListWritable, type ProjectRow } from './projectsApi';
+import { addProject, appliesTo, fetchProjects, type ProjectRow } from './projectsApi';
 import { CLIENTS_ALL, CLIENTS_BY_VERSION } from './data/clients';
 import './VersionDetails.css';
 import { COMPAT, type Compat, type Entry, type Status } from './data/compat';
@@ -142,15 +142,14 @@ function useLiveComponents(releases: Release[]) {
 }
 
 /**
- * The shared clients/projects list (Excel table behind Power Automate). 'off' means it is not configured,
- * 'error' means it could not be reached; in both cases the drawer falls back to src/data/clients.ts.
+ * The shared clients/projects list (a JSON file in Vercel Blob, through /api/projects).
+ * 'error' means it could not be reached; the drawer then falls back to src/data/clients.ts.
  */
-interface SharedProjects { status: 'off' | 'loading' | 'ready' | 'error'; rows: ProjectRow[] }
+interface SharedProjects { status: 'loading' | 'ready' | 'error'; rows: ProjectRow[] }
 
 function useSharedProjects() {
-  const [shared, setShared] = useState<SharedProjects>({ status: sharedListReadable ? 'loading' : 'off', rows: [] });
+  const [shared, setShared] = useState<SharedProjects>({ status: 'loading', rows: [] });
   const reload = () => {
-    if (!sharedListReadable) return;
     fetchProjects()
       .then((rows) => setShared({ status: 'ready', rows }))
       .catch(() => setShared((s) => ({ status: s.status === 'ready' ? 'ready' : 'error', rows: s.rows })));
@@ -315,7 +314,7 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
   const added = new Set(previous ? components.filter((n) => !before.has(n)) : []);
   const live = !!liveComponents[r.version];
 
-  // Rows from the shared Excel list that apply to this version (an empty version cell or "*" means every version).
+  // Entries from the shared list that apply to this version (an empty version or "*" means every version).
   // While the shared list is not available, the static defaults from src/data/clients.ts are shown instead.
   // Entries kept only in this browser (the shared list was off or unreachable when they were added) are always included.
   const listed = shared.status === 'ready'
@@ -408,10 +407,7 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
           ) : shared.status === 'loading' ? (
             <p className="dsub dclients-empty" role="status">Loading the shared list…</p>
           ) : (
-            <p className="dsub dclients-empty">
-              No clients listed for this version yet. Use Get NPM to add a client and project.
-              {sharedListWritable ? '' : ' Entries you add are saved in this browser only.'}
-            </p>
+            <p className="dsub dclients-empty">No clients listed for this version yet. Use Get NPM to add a client and project.</p>
           )}
           {shared.status === 'error' && <p className="dsub">The shared list could not be loaded, so the built-in list is shown.</p>}
         </section>
@@ -435,12 +431,8 @@ export default function App() {
   const { shared, reload: reloadShared } = useSharedProjects();
   const [open, setOpen] = useState<string>();
 
-  /** Saves a client/project to the shared list when it is set up, otherwise (or if that fails) in this browser. */
+  /** Saves a client/project to the shared list; if that fails, keeps it in this browser instead. */
   const registerProject = async (entry: { version: string; client: string; project: string }): Promise<SaveResult> => {
-    if (!sharedListWritable) {
-      saveRegistration(entry);
-      return 'browser';
-    }
     try {
       await addProject(entry);
       reloadShared();

@@ -18,17 +18,11 @@ export interface ProjectRow {
 
 const API_URL = (import.meta.env.VITE_PROJECTS_API_URL as string | undefined)?.trim() || '/api/projects';
 
-export const sharedListReadable = true;
-export const sharedListWritable = true;
-
 export const MAX_TEXT = 100;
 
 /** Returns a message when the text should not be sent, otherwise undefined. */
 export function textProblem(text: string): string | undefined {
-  if (text.length > MAX_TEXT) return `Use ${MAX_TEXT} characters or fewer.`;
-  // Kept from the spreadsheet days: a leading = + - @ can be read as a formula if the list is ever opened in Excel.
-  if (/^[=+\-@]/.test(text)) return 'This cannot start with = + - or @.';
-  return undefined;
+  return text.length > MAX_TEXT ? `Use ${MAX_TEXT} characters or fewer.` : undefined;
 }
 
 /** Does a list entry apply to this version? Empty or "*" means every version. Several versions can be separated by commas. */
