@@ -22,9 +22,9 @@ export interface Store {
  */
 export const DEFAULTS: Row[] = [
   { version: '', client: 'ui practise', project: 'dashboard' },
-  { version: '', client: 'CSC', project: 'LMS' },
-  { version: '', client: 'Clopay', project: 'mydore' },
-  { version: '', client: 'Axalta', project: 'colordata' },
+  { version: '0.2.0', client: 'CSC', project: 'LMS' },
+  { version: '0.2.0', client: 'Clopay', project: 'mydore' },
+  { version: '0.1.0', client: 'Axalta', project: 'colordata' },
 ];
 
 const MAX_TEXT = 100;

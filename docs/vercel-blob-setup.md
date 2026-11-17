@@ -68,6 +68,7 @@ There is no admin screen. To change the list:
 
 - `DEFAULTS` in `api/_core.ts`: shown until the first entry is added.
 - `src/data/clients.ts`: shown when the function cannot be reached. Keep both lists the same.
+- Once the first entry has been added, the list lives in the saved file, so changing `DEFAULTS` no longer has an effect. Edit the file instead (see above).
 
 ---
 
