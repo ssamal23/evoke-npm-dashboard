@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Modal } from './components/Modal';
-import { saveRegistration } from './registrations';
+import { textProblem } from './projectsApi';
 import './GetNpmDialog.css';
+
+/** shared = saved to the shared list, browser = kept only in this browser, failed = shared list unreachable, so kept in this browser */
+export type SaveResult = 'shared' | 'browser' | 'failed';
 
 interface Props {
   version: string;
+  /** Called once when the form is submitted. Saves the client and project and says where it went. */
+  onRegister: (entry: { version: string; client: string; project: string }) => Promise<SaveResult>;
   /** npm package name, e.g. "@evoke-tech/stencil-ui-kit" */
   packageName: string;
   /** Link to this version's page on npmjs.com */
@@ -30,8 +35,16 @@ const AlertIcon = () => (
 );
 
 /** Two steps: ask for client and project, then show the install command. */
-export function GetNpmDialog({ version, packageName, npmUrl, onClose, returnFocusTo }: Props) {
+const SAVE_TEXT = {
+  saving: 'Saving to the shared list…',
+  shared: 'Saved to the shared list.',
+  browser: 'Saved in this browser only.',
+  failed: 'The shared list could not be reached, so this was saved in this browser only.',
+} as const;
+
+export function GetNpmDialog({ version, onRegister, packageName, npmUrl, onClose, returnFocusTo }: Props) {
   const [step, setStep] = useState<'form' | 'done'>('form');
+  const [saved, setSaved] = useState<'saving' | SaveResult>('saving');
   const [client, setClient] = useState('');
   const [project, setProject] = useState('');
   const [errors, setErrors] = useState<{ client?: string; project?: string }>({});
@@ -46,8 +59,8 @@ export function GetNpmDialog({ version, packageName, npmUrl, onClose, returnFocu
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const next = {
-      client: client.trim() ? undefined : 'Enter a client name to get the link.',
-      project: project.trim() ? undefined : 'Enter a project name to get the link.',
+      client: client.trim() ? textProblem(client.trim()) : 'Enter a client name to get the link.',
+      project: project.trim() ? textProblem(project.trim()) : 'Enter a project name to get the link.',
     };
     setErrors(next);
     if (next.client || next.project) {
@@ -55,8 +68,12 @@ export function GetNpmDialog({ version, packageName, npmUrl, onClose, returnFocu
       document.getElementById(next.client ? 'gn-client' : 'gn-project')?.focus();
       return;
     }
-    saveRegistration({ version, client: client.trim(), project: project.trim() });
+    setSaved('saving');
     setStep('done');
+    // The install command is shown straight away; the save finishes in the background.
+    onRegister({ version, client: client.trim(), project: project.trim() })
+      .then(setSaved)
+      .catch(() => setSaved('failed'));
   };
 
   const copy = async () => {
@@ -93,6 +110,7 @@ export function GetNpmDialog({ version, packageName, npmUrl, onClose, returnFocu
           </button>
         </div>
         <span className="visually-hidden" role="status">{copied ? 'Command copied to clipboard' : ''}</span>
+        <p className={`gn-save ${saved}`} role="status">{SAVE_TEXT[saved]}</p>
         <div className="gn-actions between">
           <a className="gn-link" href={npmUrl} target="_blank" rel="noreferrer">
             View package on npm <span aria-hidden="true">↗</span>

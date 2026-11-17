@@ -22,3 +22,7 @@
 .gn-copy:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 .gn-link { color: #1a4fd6; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 .gn-link:hover { color: #0b1560; }
+
+.gn-save { margin: 12px 0 0; font-size: 0.82rem; color: #5f6672; }
+.gn-save.shared { color: #0f5b27; }
+.gn-save.failed { color: #8a5a00; }
