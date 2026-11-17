@@ -15,6 +15,8 @@ npm run build
 | Version list, dates, sizes, Stencil version, deprecated flag | npm registry, fetched live |
 | Frameworks, styling libraries, components per version | `src/data/compat.ts` (edit at each release) |
 | Release notes (the **Download .md** file) | `changelogs/<version>.md` |
+| Components per version | The published package itself (`dist/types/components.d.ts` on unpkg), with `compat.ts` as an offline fallback |
+| Clients / projects using a version | A JSON file in a private Vercel Blob store, through the serverless function `api/projects.ts`. Setup: [docs/vercel-blob-setup.md](docs/vercel-blob-setup.md). When it is not available (for example `npm run dev`): `src/data/clients.ts` plus this browser's own entries |
 
 ## Reusable slide-over panel
 
