@@ -3,8 +3,8 @@ import { Modal } from './components/Modal';
 import { textProblem } from './projectsApi';
 import './GetNpmDialog.css';
 
-/** shared = saved to the shared list, browser = kept only in this browser, failed = shared list unreachable, so kept in this browser */
-export type SaveResult = 'shared' | 'browser' | 'failed';
+/** shared = saved to the shared list, failed = the shared list was unreachable, so it was kept in this browser */
+export type SaveResult = 'shared' | 'failed';
 
 interface Props {
   version: string;
@@ -38,7 +38,6 @@ const AlertIcon = () => (
 const SAVE_TEXT = {
   saving: 'Saving to the shared list…',
   shared: 'Saved to the shared list.',
-  browser: 'Saved in this browser only.',
   failed: 'The shared list could not be reached, so this was saved in this browser only.',
 } as const;
 
