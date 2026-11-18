@@ -37,9 +37,6 @@ function cmpVersion(a: string, b: string) {
   return 0;
 }
 
-/** Tested framework names, e.g. ["Angular", "Vue"] */
-const testedFrameworks = (v: string) => compatOf(v).frameworks.filter((f) => f.status === 'tested').map((f) => f.name);
-
 function changelogMarkdown(r: Release): string {
   const c = compatOf(r.version);
   const rows = (list: Entry[]) =>
@@ -90,9 +87,10 @@ function downloadMd(r: Release) {
   URL.revokeObjectURL(url);
 }
 
-function Icon({ name }: { name: 'download' | 'arrow' | 'close' }) {
+function Icon({ name }: { name: 'download' | 'arrow' | 'close' | 'box' }) {
   const d = {
     download: 'M12 3v12m0 0l-4-4m4 4l4-4M5 21h14',
+    box: 'M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8',
     arrow: 'M5 12h14m0 0l-6-6m6 6l-6 6',
     close: 'M6 6l12 12M18 6L6 18',
   }[name];
@@ -159,6 +157,24 @@ function useSharedProjects() {
   return { shared, reload };
 }
 
+/**
+ * Clients/projects listed for one version, or for all versions when `version` is left out.
+ * Source: the shared list (an empty version or "*" means every version), or the built-in list in
+ * src/data/clients.ts while the shared list cannot be loaded; plus the entries kept in this browser.
+ * The same client + project is counted once.
+ */
+function projectsFor(shared: SharedProjects, version?: string): { client: string; project: string }[] {
+  const base = shared.status === 'ready'
+    ? shared.rows.filter((x) => version === undefined || appliesTo(x.version, version))
+    : version === undefined
+      ? [...CLIENTS_ALL, ...Object.values(CLIENTS_BY_VERSION).flat()]
+      : [...CLIENTS_ALL, ...(CLIENTS_BY_VERSION[version] ?? [])];
+  const mine = loadRegistrations().filter((x) => version === undefined || x.version === version);
+  return [...base, ...mine].filter(
+    (x, i, all) => all.findIndex((y) => y.client.toLowerCase() === x.client.toLowerCase() && y.project.toLowerCase() === x.project.toLowerCase()) === i,
+  );
+}
+
 function useReleases() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [state, setState] = useState<'loading' | 'live' | 'error'>('loading');
@@ -193,38 +209,56 @@ function useReleases() {
 
 /* ───────────── Summary + history ───────────── */
 
-function Summary({ current, count }: { current: Release; count: number }) {
-  const components = componentsOf(current.version);
+function Summary({ current, count, shared, onOpen, onGetNpm }: { current: Release; count: number; shared: SharedProjects; onOpen: (v: string, el: HTMLElement) => void; onGetNpm: (v: string, el: HTMLElement) => void }) {
+  const loading = shared.status === 'loading';
   return (
     <section className="card summary" aria-label="Current version">
       <div>
         <div className="label">Current version</div>
-        <div className="big">{current.version}</div>
+        {/* The latest release is not in the table below, so this is the way to open its details. */}
+        <div className="big">
+          <button type="button" className="ver-link big-link" title="View version details" onClick={(e) => onOpen(current.version, e.currentTarget)}>
+            {current.version}
+          </button>
+        </div>
         <span className="status current">Current</span>
       </div>
       <div>
-        <div className="label">Components</div>
-        <div className="big">{components.length || '—'}</div>
-        <div className="sub">evoke-* web components</div>
+        <div className="label">Projects using</div>
+        <div className="big">{loading ? '—' : projectsFor(shared, current.version).length}</div>
+        <div className="sub">{loading ? 'Loading…' : `${projectsFor(shared).length} across all versions`}</div>
       </div>
       <div>
-        <div className="label">Markdown file</div>
+        <div className="label">Download Skill</div>
         <button className="btn" onClick={() => downloadMd(current)}>
           <Icon name="download" /> Download .md
         </button>
         <div className="sub">Changelog for {current.version}</div>
+      </div>
+      <div>
+        <div className="label">Get NPM</div>
+        <button type="button" className="btn" aria-haspopup="dialog" onClick={(e) => onGetNpm(current.version, e.currentTarget)}>
+          <Icon name="box" /> Get NPM link
+        </button>
+        <div className="sub">Install link for {current.version}</div>
       </div>
       <span className="visually-hidden">{count} releases published</span>
     </section>
   );
 }
 
-function History({ releases, onOpen, onGetNpm }: { releases: Release[]; onOpen: (v: string, el: HTMLElement) => void; onGetNpm: (v: string, el: HTMLElement) => void }) {
+function History({ releases: all, shared, onOpen, onGetNpm }: { releases: Release[]; shared: SharedProjects; onOpen: (v: string, el: HTMLElement) => void; onGetNpm: (v: string, el: HTMLElement) => void }) {
+  // The latest release is shown in the summary card above, so the table lists the earlier ones.
+  const releases = all.filter((r) => !r.latest);
   return (
     <section className="card history">
       <div className="history-head">
         <h2>Version history</h2>
-        <span className="sub">{releases.length} releases · click a row for details</span>
+        <span className="sub">
+          {releases.length === 0
+            ? 'No earlier releases yet'
+            : `${releases.length} earlier ${releases.length === 1 ? 'release' : 'releases'} · click a row to see version details`}
+        </span>
       </div>
       <table>
         <thead>
@@ -232,14 +266,13 @@ function History({ releases, onOpen, onGetNpm }: { releases: Release[]; onOpen: 
             <th>Version</th>
             <th>Status</th>
             <th>Released</th>
-            <th className="center">Download .md</th>
+            <th className="center">Download Skill</th>
             <th className="center">Get NPM</th>
-            <th>Tested with</th>
+            <th>Projects</th>
           </tr>
         </thead>
         <tbody>
           {releases.map((r) => {
-            const tested = testedFrameworks(r.version);
             const status = r.deprecated ? ['deprecated', 'Deprecated'] : r.latest ? ['current', 'Current'] : ['previous', 'Previous'];
             return (
               <tr
@@ -264,7 +297,7 @@ function History({ releases, onOpen, onGetNpm }: { releases: Release[]; onOpen: 
                     Get NPM <Icon name="arrow" />
                   </button>
                 </td>
-                <td>{tested.length ? tested.join(', ') : <span className="muted">Not recorded</span>}</td>
+                <td className="num">{shared.status === 'loading' ? <span className="muted">—</span> : projectsFor(shared, r.version).length}</td>
               </tr>
             );
           })}
@@ -315,16 +348,35 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
   const added = new Set(previous ? components.filter((n) => !before.has(n)) : []);
   const live = !!liveComponents[r.version];
 
-  // Rows from the shared Excel list that apply to this version (an empty version cell or "*" means every version).
-  // While the shared list is not available, the static defaults from src/data/clients.ts are shown instead.
-  // Entries kept only in this browser (the shared list was off or unreachable when they were added) are always included.
-  const listed = shared.status === 'ready'
-    ? shared.rows.filter((x) => appliesTo(x.version, r.version))
-    : [...CLIENTS_ALL, ...(CLIENTS_BY_VERSION[r.version] ?? [])];
-  const clients = [
-    ...listed,
-    ...loadRegistrations().filter((x) => x.version === r.version),
-  ].filter((x, i, all) => all.findIndex((y) => y.client.toLowerCase() === x.client.toLowerCase() && y.project.toLowerCase() === x.project.toLowerCase()) === i);
+  const clients = projectsFor(shared, r.version);
+
+  // The two buttons sit in the summary card. Once that card has scrolled out of view they also appear in the
+  // panel's header, so they stay within reach while reading further down.
+  const summaryCard = useRef<HTMLElement>(null);
+  const [summaryHidden, setSummaryHidden] = useState(false);
+  useEffect(() => {
+    const el = summaryCard.current;
+    const scroller = el?.closest('.slideover-body');
+    if (!el || !scroller) return;
+    // Hidden once the card's bottom edge has moved above the top of the scrolling area.
+    const check = () => setSummaryHidden(el.getBoundingClientRect().bottom <= scroller.getBoundingClientRect().top);
+    check();
+    scroller.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
+    return () => {
+      scroller.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, []);
+
+  const actionButtons = (
+    <>
+      <button type="button" className="dbtn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
+      <button type="button" className="dbtn primary" aria-haspopup="dialog" onClick={(e) => onGetNpm(r.version, e.currentTarget)}>
+        Get NPM <Icon name="arrow" />
+      </button>
+    </>
+  );
 
   const summary = (!components.length
     ? 'No component list recorded for this version.'
@@ -341,21 +393,17 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
       closeLabel="Close details"
       eyebrow="Version details"
       title={<>v{r.version} {r.latest && <span className="status current">Current</span>}{r.deprecated && <span className="status deprecated">Deprecated</span>}</>}
+      actions={summaryHidden ? <div className="dhead-actions">{actionButtons}</div> : undefined}
     >
       <div className="details">
-        <section className="dcard" aria-label="Release summary">
+        <section className="dcard" aria-label="Release summary" ref={summaryCard}>
           <div className="dmeta">
             <dl>
               <div><dt>Released</dt><dd>{shortDay(r.date)}</dd></div>
               <div><dt>Projects using</dt><dd>{clients.length}</dd></div>
               <div><dt>Status</dt><dd>{r.deprecated ? 'Deprecated' : r.latest ? 'Current' : 'Previous'}</dd></div>
             </dl>
-            <div className="dmeta-actions">
-              <button type="button" className="dbtn" onClick={() => downloadMd(r)}><Icon name="download" /> Download .md</button>
-              <button type="button" className="dbtn primary" aria-haspopup="dialog" onClick={(e) => onGetNpm(r.version, e.currentTarget)}>
-                Get NPM <Icon name="arrow" />
-              </button>
-            </div>
+            <div className="dmeta-actions">{actionButtons}</div>
           </div>
           {r.deprecated && <div className="dcallout">Deprecated: {r.deprecated}</div>}
         </section>
@@ -473,23 +521,25 @@ export default function App() {
       <header className="top">
         <div>
           <div className="eyebrow">Version control</div>
-          <h1>Evoke UI Kit</h1>
+          <h1>Design System</h1>
         </div>
         <div className="top-meta">
           {current?.date && <div>Last published {shortDay(releases.reduce((m, r) => (r.date > m ? r.date : m), ''))}</div>}
-          <div className={`source ${state}`}>
-            {state === 'loading' && 'Loading from npm…'}
-            {state === 'live' && 'Live data from the npm registry'}
-            {state === 'error' && 'Could not reach npm. Showing local data only.'}
-          </div>
+          {/* Only shown when something is wrong or still loading. */}
+          {state !== 'live' && (
+            <div className={`source ${state}`}>
+              {state === 'loading' && 'Loading from npm…'}
+              {state === 'error' && 'Could not reach npm. Showing local data only.'}
+            </div>
+          )}
         </div>
       </header>
 
       <main>
         {!current ? <p>Loading…</p> : (
           <>
-            <Summary current={current} count={releases.length} />
-            <History releases={releases} onOpen={openDrawer} onGetNpm={openGetNpm} />
+            <Summary current={current} count={releases.length} shared={shared} onOpen={openDrawer} onGetNpm={openGetNpm} />
+            <History releases={releases} shared={shared} onOpen={openDrawer} onGetNpm={openGetNpm} />
           </>
         )}
       </main>

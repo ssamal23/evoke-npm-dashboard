@@ -17,7 +17,7 @@ code, pre { font-family: ui-monospace, Consolas, monospace; }
 .page { max-width: 1280px; margin: 0 auto; padding: 40px 80px 64px; display: grid; gap: 20px; }
 .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: .75rem; font-weight: 500; color: var(--muted); }
-h1 { font-size: 2.5rem; font-weight: 400; letter-spacing: -0.02em; margin-top: 4px; }
+h1 { font-size: 1.5rem; font-weight: 400; letter-spacing: -0.02em; margin-top: 4px; }
 .top-meta { text-align: right; color: var(--muted); font-size: .9rem; display: grid; gap: 4px; }
 .source { font-size: .75rem; } .source.error { color: var(--warn); }
 
@@ -28,9 +28,9 @@ main { display: grid; gap: 20px; }
 .pad h2 { font-size: 1.15rem; margin-bottom: 6px; }
 
 /* summary */
-.summary { padding: 28px 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.summary { padding: 28px 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 .label { color: var(--muted); font-size: .85rem; margin-bottom: 6px; }
-.big { font-size: 2.4rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 8px; }
+.big { font-size: 1.4rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 8px; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--text); font-weight: 500; font-size: .9rem; cursor: pointer; text-decoration: none; }
 .btn:hover { background: #f4f5f8; border-color: #cfd3dc; }
@@ -52,15 +52,19 @@ main { display: grid; gap: 20px; }
 .history th:first-child, .history td:first-child { padding-left: 32px; }
 .history td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .history th.center, .history td.center { text-align: center; }
+.history td.num { font-weight: 500; font-variant-numeric: tabular-nums; }
 .row { cursor: pointer; }
 tr.row:hover { background: var(--row-hover); }
 tr.current-row { background: var(--current-bg); }
 tr.current-row:hover { background: #e6eefd; }
 .ver { white-space: nowrap; }
-.ver-link { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 500; font-size: 1.05rem; color: #1a4fd6; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.ver-link { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 500; font-size: .87rem; color: #1a4fd6; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
 .ver-link:hover { color: var(--navy); text-decoration-thickness: 2px; }
 .ver-link:focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; border-radius: 3px; }
-.history td.muted, .history .btn, .history th { white-space: nowrap; }
+/* The big current-version number in the summary card: looks like the plain number, underlines on hover. */
+.big-link { font: inherit; letter-spacing: inherit; color: inherit; text-decoration: none; }
+.big-link:hover { color: var(--navy); text-decoration: underline; text-decoration-thickness: 2px; }
+.history td.muted, .history .btn, .history th { white-space: nowrap; font-size: .87rem}
 
 /* forms */
 .row { flex-wrap: wrap; }

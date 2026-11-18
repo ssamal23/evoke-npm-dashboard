@@ -16,7 +16,8 @@
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.15);
   animation: slideover-in 0.25s ease-out;
 }
-.slideover-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 24px 28px 16px; border-bottom: 1px solid var(--slideover-border); }
+.slideover-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 24px 28px 16px; border-bottom: 1px solid var(--slideover-border); }
+.slideover-head-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .slideover-eyebrow { color: var(--slideover-muted); font-size: 0.85rem; margin-bottom: 6px; }
 .slideover-title { margin: 0; font-size: var(--slideover-title-size, 1.8rem); letter-spacing: -0.01em; }
 .slideover-subtitle { color: var(--slideover-muted); font-size: 0.8rem; margin-top: 6px; }

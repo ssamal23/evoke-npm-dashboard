@@ -17,6 +17,10 @@
 .dmeta dt { font-size: 0.62rem; color: var(--muted); margin-bottom: 4px; }
 .dmeta dd { margin: 0; font-weight: 500; font-size: 0.8rem; }
 .dmeta-actions { display: flex; gap: 8px; }
+/* The same buttons, shown in the panel header once the summary card has scrolled away. */
+.dhead-actions { display: flex; align-items: center; gap: 8px; animation: dhead-in 0.15s ease-out; }
+@keyframes dhead-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dhead-actions { animation: none; } }
 .dbtn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #c9ced8; background: #fff; color: var(--text); font-size: 0.75rem; font-weight: 500; cursor: pointer; text-decoration: none; }
 .dbtn:hover { background: #f4f5f8; }
 .dbtn.primary { background: #2f5be7; border-color: #2f5be7; color: #fff; }

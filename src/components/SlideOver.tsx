@@ -11,6 +11,8 @@ export interface SlideOverProps {
   eyebrow?: ReactNode;
   /** Line below the title. */
   subtitle?: ReactNode;
+  /** Buttons shown in the header, next to the close button. They stay in view while the body scrolls. */
+  actions?: ReactNode;
   /** Content of the scrolling body. */
   children: ReactNode;
   /** Fixed bar at the bottom (buttons). Omit for no footer. */
@@ -37,6 +39,7 @@ export function SlideOver({
   title,
   eyebrow,
   subtitle,
+  actions,
   children,
   footer,
   width = '560px',
@@ -66,11 +69,14 @@ export function SlideOver({
             <h2 id={titleId} className="slideover-title">{title}</h2>
             {subtitle && <div className="slideover-subtitle">{subtitle}</div>}
           </div>
-          <button ref={closeButton} type="button" className="slideover-close" onClick={onClose} aria-label={closeLabel}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
+          <div className="slideover-head-right">
+            {actions}
+            <button ref={closeButton} type="button" className="slideover-close" onClick={onClose} aria-label={closeLabel}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
         </header>
         <div className="slideover-body">{children}</div>
         {footer && <footer className="slideover-foot">{footer}</footer>}
