@@ -402,8 +402,14 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
         <section className="dcard" aria-labelledby="d-clients">
           <h3 id="d-clients">Clients / projects using this version</h3>
           {clients.length ? (
-            <ul className="dclients">
-              {clients.map((x) => <li key={`${x.client}|${x.project}`}><strong>{x.client}</strong><span>{x.project}</span></li>)}
+            <ul className="dclients" aria-label="Clients and projects">
+              {clients.map((x) => (
+                <li key={`${x.client}|${x.project}`} className="dchip">
+                  <strong>{x.client}</strong>
+                  <span className="dchip-sep" aria-hidden="true">·</span>
+                  <span className="dchip-project">{x.project}</span>
+                </li>
+              ))}
             </ul>
           ) : shared.status === 'loading' ? (
             <p className="dsub dclients-empty" role="status">Loading the shared list…</p>

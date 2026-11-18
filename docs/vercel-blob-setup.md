@@ -81,5 +81,10 @@ There is no admin screen. To change the list:
   additions a day this is very unlikely. If it happens, the missing entry can simply be added again.
 - **Others see a new entry on their next page load.** The page does not refresh itself.
 - **The store belongs to your Vercel project.** If the project is deleted, the data goes with it. Download `projects.json` now and then as a backup.
-- **Local development.** `npm run dev` has no `/api`, so it shows the built-in list. To test the function locally, use the
-  [Vercel CLI](https://vercel.com/docs/cli) (`vercel dev`) after `vercel link` and `vercel env pull`.
+- **Local development.** The `/api` functions exist only on Vercel, so `npm run dev` forwards `/api` to the deployed dashboard
+  (`vite.config.ts`). You see the real shared list locally. It is read-only in practice: adding a project from `localhost` is
+  refused by the function (wrong site), so the dialog says it was saved in this browser only.
+  - To forward to a different address, or turn forwarding off, set `API_PROXY_TARGET` in `.env.local` (empty value = off).
+  - To run the function itself locally, with write access to the real store, use the
+    [Vercel CLI](https://vercel.com/docs/cli) (`vercel dev`) after `vercel link` and `vercel env pull`. Entries added that way go into
+    the live store.

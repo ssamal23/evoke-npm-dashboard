@@ -39,12 +39,9 @@
 .dnotes strong { font-weight: 500; }
 
 /* clients */
-.dclients { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.dclients li { background: #f4f5f8; border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
-.dclients strong { font-size: 0.8rem; overflow-wrap: anywhere; }
-.dclients span { font-size: 0.72rem; color: var(--muted); overflow-wrap: anywhere; }
+.dclients { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dchip { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; padding: 5px 6px 5px 12px; background: #f4f5f8; border: 1px solid var(--border); border-radius: 999px; font-size: 0.78rem; }
+.dchip strong { font-weight: 500; color: var(--text); overflow-wrap: anywhere; }
+.dchip-sep { color: #a0a6b2; }
+.dchip-project { color: var(--muted); overflow-wrap: anywhere; }
 .dclients-empty { margin-top: 12px; }
-
-@media (max-width: 520px) {
-  .dclients { grid-template-columns: 1fr; }
-}
