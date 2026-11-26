@@ -102,10 +102,6 @@ function Icon({ name }: { name: 'download' | 'arrow' | 'close' | 'box' }) {
   );
 }
 
-function Pill({ status }: { status: Status }) {
-  return <span className={`pill ${status}`}>{LABEL[status]}</span>;
-}
-
 /**
  * Component list read from the published package itself, so a new component shows up
  * as soon as the version is on npm. Falls back to src/data/compat.ts when unpkg is unreachable.
@@ -412,18 +408,14 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
           <h3 id="d-frameworks">Frameworks</h3>
           <p className="dsub">Framework versions this release was tested with.</p>
           <table className="dtable">
-            <thead><tr><th>Framework</th><th>Tested with</th><th>Status</th></tr></thead>
+            <thead><tr><th>Framework</th><th>Version</th></tr></thead>
             <tbody>
               {c.frameworks.map((e) => (
-                <tr key={e.name}><td>{e.name}</td><td className={e.version === '—' ? 'dmuted' : undefined}>{dash(e.version)}</td><td><Pill status={e.status} /></td></tr>
+                <tr key={e.name}><td>{e.name}</td><td className={e.version === '—' ? 'dmuted' : undefined}>{dash(e.version)}</td></tr>
               ))}
             </tbody>
           </table>
           {!c.frameworks.length && <p className="dsub">No data.</p>}
-          <div className="dlegend">
-            <span><span className="pill tested">Tested</span> Run in a real app</span>
-            <span><span className="pill expected">Expected</span> Web component, not yet tested</span>
-          </div>
           <Notes list={c.frameworks} />
         </section>
 
@@ -431,14 +423,13 @@ function VersionDetails({ r, releases, shared, onClose, onGetNpm, returnFocusTo 
           <h3 id="d-styling">Styling libraries</h3>
           <p className="dsub">Theme files shipped and the library versions they map to.</p>
           <table className="dtable">
-            <thead><tr><th>Library</th><th>Theme file</th><th>Version</th><th>Status</th></tr></thead>
+            <thead><tr><th>Library</th><th>Theme file</th><th>Version</th></tr></thead>
             <tbody>
               {c.styling.map((e) => (
                 <tr key={e.name}>
                   <td>{e.name.replace(' (default Evoke look)', '')}</td>
                   <td>{THEME_FILE[e.name] ? <code>{THEME_FILE[e.name]}</code> : <span className="dmuted">—</span>}</td>
                   <td className={e.version === '—' ? 'dmuted' : undefined}>{dash(e.version)}</td>
-                  <td><Pill status={e.status} /></td>
                 </tr>
               ))}
             </tbody>
