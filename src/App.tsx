@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
+import logoUrl from './assets/evoke-logo-white.svg';
 import { SlideOver } from './components/SlideOver';
 import { GetNpmDialog, type SaveResult } from './GetNpmDialog';
 import { ComponentGallery } from './ComponentGallery';
@@ -509,6 +510,11 @@ export default function App() {
   const closeDrawer = () => setOpen(undefined);
 
   return (
+    <>
+    <div className="site-header">
+      <img className="site-logo" src={logoUrl} alt="Evoke Technologies" />
+      <span className="site-title">Design System</span>
+    </div>
     <div className="page">
       <header className="top">
         <div>
@@ -550,5 +556,6 @@ export default function App() {
         />
       )}
     </div>
+    </>
   );
 }

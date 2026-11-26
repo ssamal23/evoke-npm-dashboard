@@ -32,7 +32,34 @@ const ALL_20 = [
   'tabs', 'badge', 'tooltip', 'toast', 'table', 'pagination', 'chip', 'progress', 'app-bar', 'quantity-stepper',
 ];
 
+const ALL_34 = [
+  ...ALL_20,
+  'divider', 'list', 'button-toggle', 'expansion', 'menu', 'slider', 'sidenav', 'stepper',
+  'bottom-sheet', 'grid-list', 'icon', 'datepicker', 'timepicker', 'tree',
+];
+
 export const COMPAT: Record<string, Compat> = {
+  '0.3.0': {
+    frameworks: [
+      { name: 'Angular', version: '22', status: 'tested', note: 'Built with the Angular CLI (strict templates, zoneless). Use defineCustomElements() from the loader; $event.detail is typed' },
+      { name: 'React', version: '19', status: 'tested', note: 'Vite production build. Register each component from @evoke-tech/stencil-ui-kit/components/<name>.js (the loader does not work in Vite builds). Events: onevokeChange' },
+      { name: 'React', version: '18', status: 'tested', note: 'Same registration as React 19. Object props and events need a ref (setting properties and addEventListener), see the README' },
+      { name: 'Vue', version: '3', status: 'tested', note: 'Vite production build. The /vue wrappers need no setup. Raw tags need isCustomElement, per-component registration and addEventListener for events' },
+      { name: 'Plain HTML', version: 'Chromium', status: 'tested', note: '86 checks across all 34 components' },
+    ],
+    styling: [
+      { name: 'Plain CSS (default Evoke look)', version: '—', status: 'tested', note: 'No theme file needed' },
+      { name: 'Tailwind CSS', version: '4.1', status: 'expected', note: 'Tested in 0.2.0. Not re-run for the 14 new components' },
+      { name: 'Bootstrap', version: '5.3.8', status: 'expected', note: 'Tested in 0.2.0. Not re-run for the 14 new components' },
+      { name: 'Angular Material', version: '22.2 (M3)', status: 'expected', note: 'Tested in 0.2.0. Not re-run for the 14 new components' },
+    ],
+    components: ALL_34,
+    notes: [
+      '14 new components, 34 in total',
+      'Fixed: the Vue wrappers now work in Vite and Rollup production builds',
+      'Not tested: TypeScript React (JSX types for evoke-* tags), webpack, Next.js, Nuxt',
+    ],
+  },
   '0.2.0': {
     frameworks: [
       { name: 'Angular', version: '22.2', status: 'tested', note: 'Run in a real Angular 22 + Tailwind 4 app' },
