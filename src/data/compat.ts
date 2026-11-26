@@ -2,8 +2,9 @@
  * Compatibility data per released version.
  *
  * npm does NOT store which Angular/React/Vue/Tailwind/Bootstrap versions a package
- * was tested with, so this file is the source of truth for that. Update it at each
- * release (later this can move to a compat.json shipped inside the package).
+ * was tested with. From 0.3.1 on each release ships that in its own compat.json, which the
+ * dashboard reads (see App.tsx). This file is only the record for releases before that:
+ * do not add new versions here.
  *
  * status:
  *   tested   = actually run in a real app
@@ -41,10 +42,10 @@ const ALL_34 = [
 export const COMPAT: Record<string, Compat> = {
   '0.3.0': {
     frameworks: [
-      { name: 'Angular', version: '22', status: 'tested', note: 'Built with the Angular CLI (strict templates, zoneless). Use defineCustomElements() from the loader; $event.detail is typed' },
-      { name: 'React', version: '19', status: 'tested', note: 'Vite production build. Register each component from @evoke-tech/stencil-ui-kit/components/<name>.js (the loader does not work in Vite builds). Events: onevokeChange' },
-      { name: 'React', version: '18', status: 'tested', note: 'Same registration as React 19. Object props and events need a ref (setting properties and addEventListener), see the README' },
-      { name: 'Vue', version: '3', status: 'tested', note: 'Vite production build. The /vue wrappers need no setup. Raw tags need isCustomElement, per-component registration and addEventListener for events' },
+      { name: 'Angular', version: '22.3', status: 'tested', note: 'Built with the Angular CLI (strict templates, zoneless). Use defineCustomElements() from the loader; $event.detail is typed' },
+      { name: 'React', version: '19.3', status: 'tested', note: 'Vite production build. Register each component from @evoke-tech/stencil-ui-kit/components/<name>.js (the loader does not work in Vite builds). Events: onevokeChange' },
+      { name: 'React', version: '18.3', status: 'tested', note: 'Same registration as React 19. Object props and events need a ref (setting properties and addEventListener), see the README' },
+      { name: 'Vue', version: '3.5', status: 'tested', note: 'Vite production build. The /vue wrappers need no setup. Raw tags need isCustomElement, per-component registration and addEventListener for events' },
       { name: 'Plain HTML', version: 'Chromium', status: 'tested', note: '86 checks across all 34 components' },
     ],
     styling: [

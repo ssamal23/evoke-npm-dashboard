@@ -26,7 +26,18 @@ interface Release {
 const LABEL: Record<Status, string> = { tested: 'Tested', expected: 'Expected', unknown: 'Unknown' };
 
 const empty: Compat = { frameworks: [], styling: [], components: [], notes: ['No compatibility data recorded for this version.'] };
-const compatOf = (v: string): Compat => COMPAT[v] ?? empty;
+/**
+ * Compatibility data. From 0.3.1 on, each release ships its own compat.json inside the npm package (written by the
+ * package's release workflow, with the exact framework versions the tests installed), and that is used first.
+ * Older releases have no such file, so they use src/data/compat.ts.
+ */
+const compatTried = new Set<string>();
+const liveCompat: Record<string, Pick<Compat, 'frameworks' | 'styling' | 'notes'>> = {};
+const compatOf = (v: string): Compat => {
+  const base = COMPAT[v] ?? empty;
+  const live = liveCompat[v];
+  return live ? { frameworks: live.frameworks, styling: live.styling, notes: live.notes, components: base.components } : base;
+};
 const kb = (n?: number) => (n ? `${(n / 1024).toFixed(0)} KB` : '—');
 const shortDay = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
@@ -124,16 +135,31 @@ async function fetchComponents(version: string): Promise<string[]> {
   return names;
 }
 
-/** Loads the component list of every release once. Returns a counter that changes when data arrives. */
+async function fetchCompat(version: string): Promise<Pick<Compat, 'frameworks' | 'styling' | 'notes'>> {
+  const res = await fetch(`https://unpkg.com/${PKG}@${version}/compat.json`);
+  if (!res.ok) throw new Error(String(res.status));
+  const data = await res.json();
+  if (data.kit !== version || !Array.isArray(data.frameworks) || !Array.isArray(data.styling)) throw new Error('unexpected compat.json');
+  return { frameworks: data.frameworks, styling: data.styling, notes: Array.isArray(data.notes) ? data.notes : [] };
+}
+
+/** Loads the component list and compat.json of every release once. Returns a counter that changes when data arrives. */
 function useLiveComponents(releases: Release[]) {
   const [loaded, setLoaded] = useState(0);
   useEffect(() => {
     let cancelled = false;
     for (const r of releases) {
-      if (liveComponents[r.version]) continue;
-      fetchComponents(r.version)
-        .then((names) => { liveComponents[r.version] = names; if (!cancelled) setLoaded((n) => n + 1); })
-        .catch(() => { /* keep the local fallback for this version */ });
+      if (!liveComponents[r.version]) {
+        fetchComponents(r.version)
+          .then((names) => { liveComponents[r.version] = names; if (!cancelled) setLoaded((n) => n + 1); })
+          .catch(() => { /* keep the local fallback for this version */ });
+      }
+      if (!compatTried.has(r.version)) {
+        compatTried.add(r.version); // releases before 0.3.1 have no compat.json: ask once, keep src/data/compat.ts
+        fetchCompat(r.version)
+          .then((c) => { liveCompat[r.version] = c; if (!cancelled) setLoaded((n) => n + 1); })
+          .catch(() => { /* no compat.json for this version */ });
+      }
     }
     return () => { cancelled = true; };
   }, [releases]);
